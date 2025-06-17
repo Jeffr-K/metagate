@@ -1,6 +1,4 @@
-def main():
-    print("Hello from server!")
+from src.bootstrap import Bootstrap
 
+app = Bootstrap().instance
 
-if __name__ == "__main__":
-    main()
