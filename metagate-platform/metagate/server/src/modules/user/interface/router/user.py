@@ -26,5 +26,3 @@ async def dropdown():
 @user.put("/")
 async def edit():
     pass
-
-

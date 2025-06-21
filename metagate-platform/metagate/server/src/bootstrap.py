@@ -1,11 +1,20 @@
-from typing import Union
+import os
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from src.infrastructure.cache.redis_client import redis_client
+from src.infrastructure.database.session import init_db
+from src.infrastructure.logger.logger import logger
+from src.infrastructure.nats.client import nats_client
+from src.infrastructure.prometheus.metrics import get_metrics, metrics_middleware
+from src.infrastructure.sentry.client import init_sentry
+from src.modules.project.interface.router.project import projects
+
 
 class Bootstrap:
-    _instance: Union[FastAPI]
+    _instance: FastAPI
     _cors = ["http://localhost:3000", "*"]
 
     def __init__(self):
@@ -13,6 +22,8 @@ class Bootstrap:
 
     @classmethod
     def start(cls):
+        cls._load_env()
+        cls._init_infrastructure()
         cls._instance = FastAPI()
         cls._router()
         cls._middleware()
@@ -20,20 +31,50 @@ class Bootstrap:
         return cls._instance
 
     @classmethod
+    def _load_env(cls):
+        if os.path.exists(".env.develop"):
+            load_dotenv(".env.develop")
+            logger.info("Loaded .env.develop")
+        elif os.path.exists(".env.production"):
+            load_dotenv(".env.production")
+            logger.info("Loaded .env.production")
+        elif os.path.exists(".env"):
+            load_dotenv(".env")
+            logger.info("Loaded .env")
+
+    @classmethod
+    def _init_infrastructure(cls):
+        try:
+            init_sentry()
+            logger.info("Sentry initialized")
+
+            if redis_client.ping():
+                logger.info("Redis connected")
+            else:
+                logger.warning("Redis connection failed")
+
+            if nats_client.is_connected():
+                logger.info("NATS connected")
+            else:
+                logger.warning("NATS not connected")
+
+        except Exception as e:
+            logger.error(f"Infrastructure initialization failed: {e}")
+
+    @classmethod
     def _router(cls):
-        # cls._instance.include_router(router=user)
-        pass
+        cls._instance.include_router(router=projects)
+        cls._instance.add_route("/metrics", get_metrics)
+
+        logger.info("Routers configured")
 
     @classmethod
     def _database(cls):
-        pass
-        # @cls._instance.on_event("startup")
-        # async def initialize_mongo():
-        #     await MongoClientConfig.connect()
-        #
-        # @cls._instance.on_event("shutdown")
-        # async def dropdown_mongo():
-        #     await MongoClientConfig.close()
+        try:
+            init_db()
+            logger.info("Database initialized")
+        except Exception as e:
+            logger.error(f"Database initialization failed: {e}")
 
     @classmethod
     def _middleware(cls):
@@ -42,8 +83,12 @@ class Bootstrap:
             allow_origins=cls._cors,
             allow_credentials=True,
             allow_methods=["*"],
-            allow_headers=["*"]
+            allow_headers=["*"],
         )
+
+        cls._instance.middleware("http")(metrics_middleware)
+
+        logger.info("Middlewares configured")
 
     @property
     def instance(self) -> FastAPI:
