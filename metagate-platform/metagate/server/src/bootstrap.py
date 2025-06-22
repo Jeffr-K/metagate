@@ -1,20 +1,26 @@
 import os
+from typing import Union
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from modules.project.interface.project import projects
 from src.infrastructure.cache.redis_client import redis_client
 from src.infrastructure.database.session import init_db
 from src.infrastructure.logger.logger import logger
 from src.infrastructure.nats.client import nats_client
 from src.infrastructure.prometheus.metrics import get_metrics, metrics_middleware
 from src.infrastructure.sentry.client import init_sentry
-from src.modules.project.interface.router.project import projects
+from src.modules.user.interface.admin import admin
+from src.modules.user.interface.auth import auth
+from src.modules.user.interface.oauth import oauth
+from src.modules.user.interface.user import users
+from src.modules.workspace.interface.workspace import workspaces
 
 
 class Bootstrap:
-    _instance: FastAPI
+    _instance: Union[FastAPI]
     _cors = ["http://localhost:3000", "*"]
 
     def __init__(self):
@@ -64,9 +70,14 @@ class Bootstrap:
     @classmethod
     def _router(cls):
         cls._instance.include_router(router=projects)
+        cls._instance.include_router(router=workspaces)
+        cls._instance.include_router(router=users)
+        cls._instance.include_router(router=auth)
+        cls._instance.include_router(router=oauth)
+        cls._instance.include_router(router=admin)
         cls._instance.add_route("/metrics", get_metrics)
 
-        logger.info("Routers configured")
+        logger.info("Routers configured.")
 
     @classmethod
     def _database(cls):

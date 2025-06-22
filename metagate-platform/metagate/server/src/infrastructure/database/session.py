@@ -7,18 +7,15 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from .config import db_config
 
-# 엔진 생성
 engine = create_engine(
     db_config.url,
-    echo=False,  # SQL 로그 출력 여부
-    pool_pre_ping=True,  # 연결 상태 확인
-    pool_recycle=3600,  # 연결 재사용 시간
+    echo=False,
+    pool_pre_ping=True,
+    pool_recycle=3600,
 )
 
-# 세션 팩토리 생성
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base 클래스 생성
 Base = declarative_base()
 
 
