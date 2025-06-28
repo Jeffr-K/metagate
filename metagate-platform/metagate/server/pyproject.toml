@@ -25,6 +25,7 @@ dependencies = [
     "sqlmodel>=0.0.24",
     "argon2-cffi>=25.1.0",
     "bcrypt==3.2.2",
+    "loguru>=0.7.3",
 ]
 
 [dependency-groups]

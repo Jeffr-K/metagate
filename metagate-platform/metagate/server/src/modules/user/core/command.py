@@ -1,8 +1,10 @@
 from passlib.context import CryptContext
 
+from src.infrastructure.security.token import Token, TokenType
 from src.modules.user.core.entity import User
 from src.modules.user.core.repository import SQLModelUserRepository
-from src.modules.user.interface.adapter import UserRegisterAdapter, UserUpdateAdapter, UserDeleteAdapter
+from src.modules.user.interface.adapter import UserRegisterAdapter, UserUpdateAdapter, UserDeleteAdapter, \
+    UserLogoutAdapter, UserLoginAdapter
 
 
 class UserRegisterUseCase:
@@ -41,3 +43,27 @@ class UserDeleteUseCase:
         repository = SQLModelUserRepository()
         await repository.delete(adapter.user_id)
         return True
+
+
+class UserLoginUseCase:
+    def __init__(self):
+        pass
+
+    @classmethod
+    async def execute(cls, adapter: UserLoginAdapter) -> dict:
+        access_token = Token.generate(adapter.email, token_type=TokenType.ACCESS)
+        refresh_token = Token.generate(adapter.email, token_type=TokenType.REFRESH)
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }
+
+
+class UserLogoutUseCase:
+    def __init__(self):
+        pass
+
+    @classmethod
+    async def execute(cls, adapter: UserLogoutAdapter) -> dict:
+        pass

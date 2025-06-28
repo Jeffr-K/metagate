@@ -52,3 +52,25 @@ class UserDeleteAdapter(BaseModel):
                 "email": "example@gmail.com"
             }
         }
+
+class UserLoginAdapter(BaseModel):
+    email: str
+    password: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "wjdrlrkdl3@gmail.com",
+                "password": "example_password"
+            }
+        }
+
+class UserLogoutAdapter(BaseModel):
+    token: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "token": "example_token"
+            }
+        }

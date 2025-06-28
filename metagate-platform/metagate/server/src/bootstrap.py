@@ -10,6 +10,7 @@ from src.infrastructure.prometheus.metrics import metrics_middleware
 from src.infrastructure.sentry.client import init_sentry
 from dotenv import load_dotenv
 
+from src.modules.user.interface.auth import auth
 from src.modules.user.interface.user import users
 
 
@@ -64,7 +65,7 @@ class Bootstrap:
     @classmethod
     def _router(cls):
         cls._instance.include_router(router=users)
-        # cls._instance.include_router(router=auth)
+        cls._instance.include_router(router=auth)
         # cls._instance.include_router(router=oauth)
         # cls._instance.include_router(router=admin)
         # cls._instance.add_route("/metrics", get_metrics)
